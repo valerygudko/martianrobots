@@ -1,5 +1,6 @@
 package com.techtask.martianrobots;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,16 +20,19 @@ import static org.mockito.Mockito.*;
 class MartianRobotsApplicationTests {
 
 	private final static String LINE_SEPARATOR = System.getProperty("line.separator");
+	private PrintStream out = mock(PrintStream.class);
 
+	@BeforeEach
+	private void setUp(){
+		System.setOut(out);
+	}
 
 	@Test
 	@DisplayName("The grid and robot instructions can be read from console input and expected output is written to console")
 	void testInputReadCorrectly() {
 		// given
-		final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + "LLL" + LINE_SEPARATOR + "2 3 W" + LINE_SEPARATOR + "LL";
+		final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + "LLL" + LINE_SEPARATOR + "2 3 W" + LINE_SEPARATOR + "LRR";
 		System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
-		PrintStream out = mock(PrintStream.class);
-		System.setOut(out);
 
 		// when
 		MartianRobotsApplication.main(new String[]{});
@@ -41,71 +45,60 @@ class MartianRobotsApplicationTests {
 		verify(out).println(
 				eq("instructions [L, L, L]"));
 		verify(out).println(
+				eq("End position [1, 1, S]"));
+		verify(out).println(
 				eq("Start position [2, 3, W]"));
 		verify(out).println(
-				eq("instructions [L, L]"));
+				eq("instructions [L, R, R]"));
+		verify(out).println(
+				eq("End position [2, 3, N]"));
 	}
 
 	@ParameterizedTest
 	@DisplayName("Invalid instructions are not accepted")
-	@ValueSource(strings = {"R", "O"})
+	@ValueSource(strings = {"T", "O"})
 	void testInvalidInstructionsNotAccepted(String instructionType) {
 		// given
 		final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + instructionType;
 		System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
-		PrintStream out = mock(PrintStream.class);
-		System.setOut(out);
 
 		// when then
 		assertThrows(IllegalArgumentException.class, () -> MartianRobotsApplication.main(new String[]{}), String.format("No such instruction %s", instructionType));
-
 	}
 
 	@Test
 	@DisplayName("Invalid orientation is not accepted")
 	void testInvalidOrientationNotAccepted() {
-
 		// given
 		final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 O" + LINE_SEPARATOR + "L";
 		System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
-		PrintStream out = mock(PrintStream.class);
-		System.setOut(out);
 
 		// when then
 		assertThrows(IllegalArgumentException.class, () -> MartianRobotsApplication.main(new String[]{}), "No enum constant");
-
 	}
 
 	@ParameterizedTest
 	@DisplayName("Invalid grid coordinates are not accepted")
 	@CsvSource({"-52, 7", "9, 58"})
 	void testInvalidCoordinatesOfGridNotAccepted(String x, String y) {
-
 		// given
 		final String simulatedUserInput = x + " " + y + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + "LLLL";
 		System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
-		PrintStream out = mock(PrintStream.class);
-		System.setOut(out);
 
 		// when then
 		assertThrows(ConstraintViolationException.class, () -> MartianRobotsApplication.main(new String[]{}), "Constraint exception");
-
 	}
 
 	@ParameterizedTest
 	@DisplayName("Invalid start position coordinates are not accepted")
 	@CsvSource({"-51, 0", "9, 53"})
 	void testInvalidCoordinatesNotAccepted(String x, String y) {
-
 		// given
 		final String simulatedUserInput = "2 3" + LINE_SEPARATOR + x + " " + y + " E" + LINE_SEPARATOR + "LLLL";
 		System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
-		PrintStream out = mock(PrintStream.class);
-		System.setOut(out);
 
 		// when then
 		assertThrows(ConstraintViolationException.class, () -> MartianRobotsApplication.main(new String[]{}), "Constraint exception");
-
 	}
 
 }

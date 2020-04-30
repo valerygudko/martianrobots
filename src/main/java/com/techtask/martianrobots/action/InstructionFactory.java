@@ -9,7 +9,8 @@ public class InstructionFactory {
     final static Map<String, Supplier<Instruction>> map = new HashMap<>();
     static {
         map.put("L", Left::new);
-       // TODO: add other instructions
+        map.put("R", Right::new);
+       // TODO: add F instruction
     }
     public Instruction getInstruction(String instructionType){
         Supplier<Instruction> instruction = map.get(instructionType.toUpperCase());
