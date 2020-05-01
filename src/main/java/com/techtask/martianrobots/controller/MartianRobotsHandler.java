@@ -52,6 +52,7 @@ public class MartianRobotsHandler {
             while (scanner.hasNextLine()) {
                 String[] startPosition = scanner.nextLine().split("\\s");
                 validateCoordinates(startPosition);
+                validateStartPoint(grid, startPosition);
                 char[] instructions = scanner.nextLine().toCharArray();
                 validateInstructionList(instructions);
                 Position position = instructionService.process(Grid.builder().coordinates(
@@ -89,6 +90,12 @@ public class MartianRobotsHandler {
 
         if (!constraintViolations.isEmpty()) {
             throw new ConstraintViolationException(new HashSet<ConstraintViolation<?>>(constraintViolations));
+        }
+    }
+
+    private void validateStartPoint(String[] grid, String[] startCoordinates) {
+        if (Integer.parseInt(startCoordinates[0]) > Integer.parseInt(grid[0]) || Integer.parseInt(startCoordinates[1]) > Integer.parseInt(grid[1])) {
+            throw new ConstraintViolationException("Start position can't be outside of grid", new HashSet<>());
         }
     }
 

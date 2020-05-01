@@ -147,6 +147,23 @@ class MartianRobotsHandlerTest {
         assertThat(messageLoggedCaptor.getValue()).contains("Parameter is out of range:[-50,50] TRY AGAIN");
     }
 
+    @ParameterizedTest
+    @DisplayName("Start point outside of grid boundaries is not accepted")
+    @CsvSource({"2, 3, 3, 3", "2, 2, 3, 2"})
+    void testInvalidCoordinatesOfStartPointOnTheGridNotAccepted(String gridX, String gridY, String startX, String startY) {
+        // given
+        ArgumentCaptor<String> messageLoggedCaptor = ArgumentCaptor.forClass(String.class);
+        final String simulatedUserInput = gridX + " " + gridY + LINE_SEPARATOR + startX + " " + startY + " E" + LINE_SEPARATOR + "LLLL";
+        System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
+
+        // when
+        testObj.contextRefreshedEvent();
+
+        // then
+        verify(err).println(messageLoggedCaptor.capture());
+        assertThat(messageLoggedCaptor.getValue()).contains("Start position can't be outside of grid TRY AGAIN");
+    }
+
     @Test
     @DisplayName("Non numeric coordinates are not accepted")
     void testNonNumericCoordinatesNotAccepted() {

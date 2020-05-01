@@ -9,4 +9,9 @@ public class Forward implements Instruction {
         //TODO: add scent functionality, base logic and grid border check
                 return position;
     }
+
+    private boolean withinBoundaries(Position position, Grid grid){
+        return (position.getCoordinates().getX() <= grid.getCoordinates().getX()) &&
+                (position.getCoordinates().getY() <= grid.getCoordinates().getY());
+    }
 }

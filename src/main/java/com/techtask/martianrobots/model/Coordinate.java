@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
-@Builder
+@Builder(toBuilder = true)
 @Data
 public final class Coordinate {
 
