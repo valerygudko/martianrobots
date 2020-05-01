@@ -10,8 +10,9 @@ public class InstructionFactory {
     static {
         map.put("L", Left::new);
         map.put("R", Right::new);
-       // TODO: add F instruction
+        map.put("F", Forward::new);
     }
+
     public Instruction getInstruction(String instructionType){
         Supplier<Instruction> instruction = map.get(instructionType.toUpperCase());
         if(instruction != null) {

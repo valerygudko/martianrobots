@@ -49,7 +49,7 @@ class InstructionServiceImplTest {
                 )
                 .orientation(Orientation.E).build();
 
-        char[] instructions = "LLLLRRRR".toCharArray();
+        char[] instructions = "LLLLRRRRF".toCharArray();
 
         //when
         Position result = testObj.process(grid, startPosition, instructions);
@@ -80,10 +80,10 @@ class InstructionServiceImplTest {
                 )
                 .orientation(Orientation.E).build();
 
-        char[] instructions = "F".toCharArray();
+        char[] instructions = "T".toCharArray();
 
         //when then
-        assertThrows(IllegalArgumentException.class, () -> testObj.process(grid, startPosition, instructions), "No such instruction F");
+        assertThrows(IllegalArgumentException.class, () -> testObj.process(grid, startPosition, instructions), "No such instruction T");
     }
 
 }
