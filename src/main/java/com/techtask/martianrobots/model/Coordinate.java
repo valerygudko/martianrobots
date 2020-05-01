@@ -8,10 +8,10 @@ import org.hibernate.validator.constraints.Range;
 @Data
 public final class Coordinate {
 
-    @Range(min = -50, max = 50, message = "Parameter is out of range:[-50,50]")
+    @Range(min = 0, max = 50, message = "Parameter is out of range:[0,50]")
     private int x;
 
-    @Range(min = -50, max = 50, message = "Parameter is out of range:[-50,50]")
+    @Range(min = 0, max = 50, message = "Parameter is out of range:[0,50]")
     private int y;
 
 

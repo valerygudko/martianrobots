@@ -8,4 +8,5 @@ import lombok.Getter;
 public final class Position {
     private Coordinate coordinates;
     private Orientation orientation;
+    boolean isLost = false;
 }

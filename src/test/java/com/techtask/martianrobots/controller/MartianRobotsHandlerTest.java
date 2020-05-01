@@ -21,24 +21,23 @@ import java.io.ByteArrayInputStream;
 import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = MartianRobotsApplication.class)
+@SpringBootTest(classes = {MartianRobotsApplication.class})
 class MartianRobotsHandlerTest {
 
-    private final static String LINE_SEPARATOR = System.getProperty("line.separator");
     private MartianRobotsHandler testObj;
 
-    @Mock
-    private PrintStream out;
-    @Mock
-    private PrintStream err;
     @Mock
     private ContextRefreshedEvent mockStartupEvent;
     @Mock
     private ApplicationContext mockApplicationContext;
+    @Mock
+    private PrintStream out;
+    @Mock
+    private PrintStream err;
 
     @Autowired
     private InstructionServiceImpl instructionService;
@@ -55,27 +54,31 @@ class MartianRobotsHandlerTest {
     @DisplayName("The grid and robot instructions can be read from console input and expected output is written to console")
     void testInputReadCorrectly() {
         // given
-        final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + "LLL" + LINE_SEPARATOR + "2 3 W" + LINE_SEPARATOR + "LRR";
+        ArgumentCaptor<String> resultCaptor = ArgumentCaptor.forClass(String.class);
+        final String simulatedUserInput = "2 3" + System.lineSeparator() + "1 1 E" + System.lineSeparator() + "F"
+                + System.lineSeparator() + " " + System.lineSeparator() + "2 1 E" + System.lineSeparator() + "L";
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
         testObj.contextRefreshedEvent();
 
         // then
-        verify(out, times(2)).println(
-                eq("Grid [2, 3]"));
-        verify(out).println(
-                eq("Start position [1, 1, E]"));
-        verify(out).println(
-                eq("instructions [L, L, L]"));
-        verify(out).println(
-                eq("End position [1, 1, S]"));
-        verify(out).println(
-                eq("Start position [2, 3, W]"));
-        verify(out).println(
-                eq("instructions [L, R, R]"));
-        verify(out).println(
-                eq("End position [2, 3, N]"));
+        verify(out).println(resultCaptor.capture());
+        assertThat(resultCaptor.getValue()).contains("2 1 E", System.lineSeparator(), "2 1 N");
+    }
+
+    @Test
+    @DisplayName("Empty grid details are not accepted")
+    void testBlankGridDetailsAreNotAccepted() {
+        // given
+        final String simulatedUserInput = "" + System.lineSeparator();
+        System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
+
+        // when
+        testObj.contextRefreshedEvent();
+
+        // then
+        verify(err).println("For input string: \"\" TRY INPUT AGAIN");
     }
 
     @ParameterizedTest
@@ -83,15 +86,30 @@ class MartianRobotsHandlerTest {
     @ValueSource(strings = {"T", "O"})
     void testInvalidInstructionsNotAccepted(String instructionType) {
         // given
-        final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + instructionType;
+        final String simulatedUserInput = "2 3" + System.lineSeparator() + "1 1 E" + System.lineSeparator() + instructionType;
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
         testObj.contextRefreshedEvent();
 
         // then
-        verify(err).println(
-                String.format("No such instruction %s %s", instructionType, "TRY AGAIN"));
+        verify(err).println(String.format("No such instruction %s %s", instructionType, "TRY INPUT AGAIN"));
+    }
+
+    @Test
+    @DisplayName("Input with no instructions is not accepted")
+    void testInputWithNoInstructionsIsNotAccepted() {
+        // given
+        ArgumentCaptor<String> messageLoggedCaptor = ArgumentCaptor.forClass(String.class);
+        final String simulatedUserInput = "2 3" + System.lineSeparator() + "1 1 O";
+        System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
+
+        // when
+        testObj.contextRefreshedEvent();
+
+        // then
+        verify(err).println(messageLoggedCaptor.capture());
+        assertThat(messageLoggedCaptor.getValue()).contains("No instructions found TRY INPUT AGAIN");
     }
 
     @Test
@@ -103,7 +121,7 @@ class MartianRobotsHandlerTest {
         for (int i = 0; i < 102; i++){
             sb.append("L");
         }
-        final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 O" + LINE_SEPARATOR + sb.toString();
+        final String simulatedUserInput = "2 3" + System.lineSeparator() + "1 1 O" + System.lineSeparator() + sb.toString();
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
@@ -111,7 +129,7 @@ class MartianRobotsHandlerTest {
 
         // then
         verify(err).println(messageLoggedCaptor.capture());
-        assertThat(messageLoggedCaptor.getValue()).contains("Too long list of instructions", "TRY AGAIN");
+        assertThat(messageLoggedCaptor.getValue()).contains("Too long list of instructions", "TRY INPUT AGAIN");
     }
 
     @Test
@@ -119,7 +137,7 @@ class MartianRobotsHandlerTest {
     void testInvalidOrientationNotAccepted() {
         // given
         ArgumentCaptor<String> messageLoggedCaptor = ArgumentCaptor.forClass(String.class);
-        final String simulatedUserInput = "2 3" + LINE_SEPARATOR + "1 1 O" + LINE_SEPARATOR + "L";
+        final String simulatedUserInput = "2 3" + System.lineSeparator() + "1 1 O" + System.lineSeparator() + "L";
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
@@ -127,7 +145,7 @@ class MartianRobotsHandlerTest {
 
         // then
         verify(err).println(messageLoggedCaptor.capture());
-        assertThat(messageLoggedCaptor.getValue()).contains("No enum constant", "O", "TRY AGAIN");
+        assertThat(messageLoggedCaptor.getValue()).contains("No enum constant", "O", "TRY INPUT AGAIN");
     }
 
     @ParameterizedTest
@@ -136,7 +154,7 @@ class MartianRobotsHandlerTest {
     void testInvalidCoordinatesOfGridNotAccepted(String x, String y) {
         // given
         ArgumentCaptor<String> messageLoggedCaptor = ArgumentCaptor.forClass(String.class);
-        final String simulatedUserInput = x + " " + y + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + "LLLL";
+        final String simulatedUserInput = x + " " + y + System.lineSeparator() + "1 1 E" + System.lineSeparator() + "LLLL";
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
@@ -144,7 +162,7 @@ class MartianRobotsHandlerTest {
 
         // then
         verify(err).println(messageLoggedCaptor.capture());
-        assertThat(messageLoggedCaptor.getValue()).contains("Parameter is out of range:[-50,50] TRY AGAIN");
+        assertThat(messageLoggedCaptor.getValue()).contains("Parameter is out of range:[0,50] TRY INPUT AGAIN");
     }
 
     @ParameterizedTest
@@ -153,7 +171,7 @@ class MartianRobotsHandlerTest {
     void testInvalidCoordinatesOfStartPointOnTheGridNotAccepted(String gridX, String gridY, String startX, String startY) {
         // given
         ArgumentCaptor<String> messageLoggedCaptor = ArgumentCaptor.forClass(String.class);
-        final String simulatedUserInput = gridX + " " + gridY + LINE_SEPARATOR + startX + " " + startY + " E" + LINE_SEPARATOR + "LLLL";
+        final String simulatedUserInput = gridX + " " + gridY + System.lineSeparator() + startX + " " + startY + " E" + System.lineSeparator() + "LLLL";
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
@@ -161,7 +179,7 @@ class MartianRobotsHandlerTest {
 
         // then
         verify(err).println(messageLoggedCaptor.capture());
-        assertThat(messageLoggedCaptor.getValue()).contains("Start position can't be outside of grid TRY AGAIN");
+        assertThat(messageLoggedCaptor.getValue()).contains("Start position can't be outside of the grid TRY INPUT AGAIN");
     }
 
     @Test
@@ -169,7 +187,7 @@ class MartianRobotsHandlerTest {
     void testNonNumericCoordinatesNotAccepted() {
         // given
         ArgumentCaptor<String> messageLoggedCaptor = ArgumentCaptor.forClass(String.class);
-        final String simulatedUserInput = "U, 1" + LINE_SEPARATOR + "1 1 E" + LINE_SEPARATOR + "LLLL";
+        final String simulatedUserInput = "U, 1" + System.lineSeparator() + "1 1 E" + System.lineSeparator() + "LLLL";
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
@@ -177,7 +195,7 @@ class MartianRobotsHandlerTest {
 
         // then
         verify(err).println(messageLoggedCaptor.capture());
-        assertThat(messageLoggedCaptor.getValue()).contains("For input string", "U", "TRY AGAIN");
+        assertThat(messageLoggedCaptor.getValue()).contains("For input string", "U", "TRY INPUT AGAIN");
     }
 
     @ParameterizedTest
@@ -186,7 +204,7 @@ class MartianRobotsHandlerTest {
     void testInvalidCoordinatesNotAccepted(String x, String y) {
         // given
         ArgumentCaptor<String> messageLoggedCaptor = ArgumentCaptor.forClass(String.class);
-        final String simulatedUserInput = "2 3" + LINE_SEPARATOR + x + " " + y + " E" + LINE_SEPARATOR + "LLLL";
+        final String simulatedUserInput = "2 3" + System.lineSeparator() + x + " " + y + " E" + System.lineSeparator() + "LLLL";
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
 
         // when
@@ -194,7 +212,7 @@ class MartianRobotsHandlerTest {
 
         // then
         verify(err).println(messageLoggedCaptor.capture());
-        assertThat(messageLoggedCaptor.getValue()).contains("Parameter is out of range:[-50,50] TRY AGAIN");
+        assertThat(messageLoggedCaptor.getValue()).contains("Parameter is out of range:[0,50] TRY INPUT AGAIN");
     }
 
 }

@@ -10,19 +10,15 @@ public class Left implements Instruction {
     public Position execute(Position position, Grid grid) {
         switch (position.getOrientation()){
             case N:
-                System.out.println("position now W");
                 position = position.toBuilder().orientation(W).build();
                 break;
             case S:
-                System.out.println("position now E");
                 position = position.toBuilder().orientation(E).build();
                 break;
             case E:
-                System.out.println("position now N");
                 position = position.toBuilder().orientation(N).build();
                 break;
             case W:
-                System.out.println("position now S");
                 position = position.toBuilder().orientation(S).build();
                 break;
         }
