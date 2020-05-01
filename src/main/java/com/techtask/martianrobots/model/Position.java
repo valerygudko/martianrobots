@@ -1,9 +1,9 @@
 package com.techtask.martianrobots.model;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
-@AllArgsConstructor
+@Builder(toBuilder = true)
 @Getter
 public final class Position {
     private Coordinate coordinates;

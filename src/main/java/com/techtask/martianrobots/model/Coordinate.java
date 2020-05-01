@@ -1,21 +1,18 @@
 package com.techtask.martianrobots.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
+import org.hibernate.validator.constraints.Range;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-
-@Getter
-@AllArgsConstructor
+@Builder
+@Data
 public final class Coordinate {
 
-    @Min(-50)
-    @Max(50)
+    @Range(min = -50, max = 50, message = "Parameter is out of range:[-50,50]")
     private int x;
 
-    @Min(-50)
-    @Max(50)
+    @Range(min = -50, max = 50, message = "Parameter is out of range:[-50,50]")
     private int y;
+
 
 }
