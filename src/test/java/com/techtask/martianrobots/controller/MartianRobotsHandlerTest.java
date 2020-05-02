@@ -1,6 +1,10 @@
 package com.techtask.martianrobots.controller;
 
 import com.techtask.martianrobots.MartianRobotsApplication;
+import com.techtask.martianrobots.model.Coordinate;
+import com.techtask.martianrobots.model.Grid;
+import com.techtask.martianrobots.model.Orientation;
+import com.techtask.martianrobots.model.Position;
 import com.techtask.martianrobots.service.InstructionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +15,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -21,6 +24,8 @@ import java.io.ByteArrayInputStream;
 import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +44,7 @@ class MartianRobotsHandlerTest {
     @Mock
     private PrintStream err;
 
-    @Autowired
+    @Mock
     private InstructionServiceImpl instructionService;
 
     @BeforeEach
@@ -58,6 +63,23 @@ class MartianRobotsHandlerTest {
         final String simulatedUserInput = "2 3" + System.lineSeparator() + "1 1 E" + System.lineSeparator() + "F"
                 + System.lineSeparator() + " " + System.lineSeparator() + "2 1 E" + System.lineSeparator() + "L";
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
+        when(instructionService.process(any(Grid.class), any(Position.class), eq("F".toCharArray())))
+                .thenReturn(Position.builder().coordinates(
+                        Coordinate.builder()
+                                .x(2)
+                                .y(1)
+                                .build())
+                        .orientation(Orientation.E)
+                        .build());
+
+        when(instructionService.process(any(Grid.class), any(Position.class), eq("L".toCharArray())))
+                .thenReturn(Position.builder().coordinates(
+                        Coordinate.builder()
+                                .x(2)
+                                .y(1)
+                                .build())
+                        .orientation(Orientation.N)
+                        .build());
 
         // when
         testObj.contextRefreshedEvent();
@@ -65,6 +87,8 @@ class MartianRobotsHandlerTest {
         // then
         verify(out).println(resultCaptor.capture());
         assertThat(resultCaptor.getValue()).contains("2 1 E", System.lineSeparator(), "2 1 N");
+        verify(instructionService).process(any(Grid.class), any(Position.class), eq("F".toCharArray()));
+        verify(instructionService).process(any(Grid.class), any(Position.class), eq("L".toCharArray()));
     }
 
     @Test
@@ -88,6 +112,8 @@ class MartianRobotsHandlerTest {
         // given
         final String simulatedUserInput = "2 3" + System.lineSeparator() + "1 1 E" + System.lineSeparator() + instructionType;
         System.setIn(new ByteArrayInputStream(simulatedUserInput.getBytes()));
+        when(instructionService.process(any(Grid.class), any(Position.class), eq(instructionType.toCharArray())))
+                .thenThrow(new IllegalArgumentException(String.format("No such instruction %s", instructionType)));
 
         // when
         testObj.contextRefreshedEvent();
